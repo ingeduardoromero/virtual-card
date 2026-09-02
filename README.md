@@ -20,4 +20,7 @@ separator. To add a GitHub or website row, fill in its `url` and `display`.
   `.vcf`, so the visitor lands in their contacts app.
 - Phone numbers should stay in full international format so `tel:` links and the
   vCard work from any country.
-- Deployed by GitHub Pages from `main` at the repository root.
+- Deployed by `.github/workflows/pages.yml` on every push to `main`. The
+  workflow enables Pages itself on first run, so the repository's Pages source
+  is *GitHub Actions*, not a branch. It publishes `index.html` plus any image
+  files at the repository root — `README.md` and `.github/` are not served.

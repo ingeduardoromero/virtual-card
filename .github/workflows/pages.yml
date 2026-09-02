@@ -1,0 +1,48 @@
+name: Deploy card to Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# configure-pages needs pages:write to turn Pages on the first time it runs;
+# deploy-pages needs id-token:write to mint its deployment token.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deploy finish rather than cancelling it half-published.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable and configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      # Publish only the card and any image assets sitting at the repo root —
+      # not README.md, not .github/.
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          shopt -s nullglob
+          for f in *.png *.jpg *.jpeg *.svg *.webp *.ico; do cp "$f" _site/; done
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
