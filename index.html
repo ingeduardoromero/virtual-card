@@ -4,190 +4,252 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Eduardo Angel Romero Diaz</title>
-<meta name="description" content="Eduardo Angel Romero Diaz — Master of Software Engineering. Save my contact details, or reach me by email, phone, or LinkedIn.">
-<meta name="theme-color" content="#0D0F12">
-<meta name="color-scheme" content="dark">
+<meta name="description" content="Eduardo Angel Romero Diaz — Master of Software Engineering. Save my contact details, or reach me by WhatsApp, phone, email, or LinkedIn.">
+<meta name="theme-color" content="#F1F4F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B0D10" media="(prefers-color-scheme: dark)">
 
 <meta property="og:type" content="profile">
 <meta property="og:title" content="Eduardo Angel Romero Diaz">
-<meta property="og:description" content="Master of Software Engineering. Save my contact details, or reach me by email, phone, or LinkedIn.">
+<meta property="og:description" content="Master of Software Engineering. Save my contact details, or reach me by WhatsApp, phone, email, or LinkedIn.">
 <meta property="og:url" content="https://ingeduardoromero.github.io/virtual-card/">
 <meta property="og:site_name" content="Eduardo Angel Romero Diaz">
 <meta property="profile:first_name" content="Eduardo">
 <meta property="profile:last_name" content="Romero Diaz">
-<!-- To get a link preview image: drop a 1200x630 PNG at the repo root and uncomment:
+<!-- Link preview image: drop a 1200x630 PNG at the repo root and uncomment.
 <meta property="og:image" content="https://ingeduardoromero.github.io/virtual-card/preview.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630"> -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Eduardo Angel Romero Diaz">
-<meta name="twitter:description" content="Master of Software Engineering. Save my contact details, or reach me by email, phone, or LinkedIn.">
+<meta name="twitter:description" content="Master of Software Engineering. Save my contact details, or reach me by WhatsApp, phone, email, or LinkedIn.">
 
 <link rel="canonical" href="https://ingeduardoromero.github.io/virtual-card/">
 
 <style>
-  /* ---- Night Terminal ---------------------------------------------------
-     ground   #0D0F12   text  #F2F3F5   muted #8A9099
-     hairline white 10%  signal #C8F751 (button fill + focus ring only)
-     No webfonts: the system stack paints on the first frame with zero
-     network round trips. SF Pro / SF Mono on iOS, Roboto on Android.
+  /* ---- Palette ----------------------------------------------------------
+     A white contact card floating on a cool grey page, dusk-gradient banner,
+     one blue accent. Brand hues live only inside their own icon tiles.
+     No webfonts: the system stack paints on the first frame.
      --------------------------------------------------------------------- */
   :root {
-    --ground:   #0D0F12;
-    --text:     #F2F3F5;
-    --muted:    #8A9099;
-    --hairline: rgba(255,255,255,.10);
-    --press:    rgba(255,255,255,.045);
-    --signal:   #C8F751;
+    --page:      #EEF1F5;
+    --surface:   #FFFFFF;
+    --ink:       #10151C;
+    --muted:     #667085;
+    --accent:    #1B62CF;
+    --accent-ink:#FFFFFF;
+    --hairline:  rgba(16,21,28,.09);
+    --press:     rgba(16,21,28,.05);
+    --shadow:    0 1px 2px rgba(16,21,28,.05), 0 12px 32px -12px rgba(16,21,28,.18);
+    --band-1:    #0E2A52;   /* banner: deep dusk ... */
+    --band-2:    #1B62CF;   /* ... through blue ... */
+    --band-3:    #E8863A;   /* ... to a warm horizon */
+    --wa:        #25D366;
+    --li:        #0A66C2;
+    --tel:       #4A5A6B;
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
             "Helvetica Neue", Arial, sans-serif;
-    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-            "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page:     #0B0D10;
+      --surface:  #14181D;
+      --ink:      #EDF0F4;
+      --muted:    #949CA8;
+      --accent:   #4C8DF6;
+      --accent-ink:#0B0D10;
+      --hairline: rgba(237,240,244,.11);
+      --press:    rgba(237,240,244,.06);
+      --shadow:   0 1px 2px rgba(0,0,0,.4), 0 12px 32px -12px rgba(0,0,0,.6);
+    }
   }
 
   * { box-sizing: border-box; }
-
   html { -webkit-text-size-adjust: 100%; }
 
   body {
     margin: 0;
-    background: var(--ground);
-    color: var(--text);
+    background: var(--page);
+    color: var(--ink);
     font-family: var(--sans);
     font-size: 16px;
     line-height: 1.45;
     -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-  }
-
-  main {
-    max-width: 34rem;
-    margin: 0 auto;
     padding:
-      calc(env(safe-area-inset-top) + 4.5rem)
-      calc(env(safe-area-inset-right) + 1.375rem)
-      calc(env(safe-area-inset-bottom) + 3rem)
-      calc(env(safe-area-inset-left) + 1.375rem);
+      calc(env(safe-area-inset-top) + 1.25rem)
+      calc(env(safe-area-inset-right) + 1rem)
+      calc(env(safe-area-inset-bottom) + 2.5rem)
+      calc(env(safe-area-inset-left) + 1rem);
   }
 
-  /* ---- Hero ---- */
+  .card {
+    max-width: 27rem;
+    margin: 0 auto;
+    background: var(--surface);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  /* ---- Banner + avatar ---- */
+  .banner {
+    height: 8.25rem;
+    background:
+      radial-gradient(120% 140% at 78% 108%, var(--band-3) 0%, transparent 52%),
+      linear-gradient(168deg, var(--band-1) 8%, var(--band-2) 96%);
+  }
+
+  .identity { padding: 0 1.5rem 1.5rem; text-align: center; }
+
+  .avatar {
+    width: 6.5rem; height: 6.5rem;
+    margin: -3.25rem auto 0;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 4px solid var(--surface);
+    box-shadow: 0 2px 10px rgba(16,21,28,.14);
+    display: grid; place-items: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .avatar .mono {
+    width: 100%; height: 100%;
+    display: grid; place-items: center;
+    background: linear-gradient(160deg, var(--band-1), var(--band-2));
+    color: #fff;
+    font-size: 2.125rem; font-weight: 600; letter-spacing: -0.02em;
+  }
+
   h1 {
-    margin: 0;
-    font-size: clamp(2.625rem, 13.5vw, 4rem);
+    margin: .875rem 0 0;
+    font-size: clamp(1.5rem, 6.6vw, 1.9375rem);
     font-weight: 700;
-    letter-spacing: -0.045em;
-    line-height: 0.92;
+    letter-spacing: -0.028em;
+    line-height: 1.12;
     text-wrap: balance;
-    overflow-wrap: break-word;
-    hyphens: none;
   }
-
-  .meta {
-    margin: 1.5rem 0 0;
-    font-family: var(--mono);
-    font-size: 0.8125rem;
-    letter-spacing: 0.02em;
-    color: var(--muted);
-  }
-  .meta .sep { opacity: .45; padding: 0 .45em; }
-
-  /* ---- Primary action ---- */
-  .save {
-    display: block;
-    width: 100%;
-    margin: 2.75rem 0 3rem;
-    padding: 1.0625rem 1rem;
-    border: 0;
-    border-radius: 3px;
-    background: var(--signal);
-    color: var(--ground);
-    font-family: inherit;
-    font-size: 1rem;
+  .role {
+    margin: .3125rem 0 0;
+    color: var(--accent);
+    font-size: .9375rem;
     font-weight: 600;
     letter-spacing: -0.005em;
-    cursor: pointer;
-    -webkit-appearance: none;
-    appearance: none;
+  }
+  .tagline { margin: .625rem 0 0; color: var(--muted); font-size: .9375rem; }
+  .place {
+    margin: .5rem 0 0; color: var(--muted); font-size: .8125rem;
+    display: inline-flex; align-items: center; gap: .3125rem;
+  }
+  .place svg { width: .875rem; height: .875rem; flex: none; }
+
+  /* ---- Actions ---- */
+  .actions {
+    display: flex; gap: .625rem;
+    padding: 0 1.5rem 1.5rem;
+  }
+  .save {
+    flex: 1;
+    padding: .9375rem 1rem;
+    border: 0; border-radius: 999px;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: inherit; font-size: 1rem; font-weight: 600;
+    letter-spacing: -0.005em;
+    cursor: pointer; -webkit-appearance: none; appearance: none;
     transition: opacity .12s ease;
   }
-  .save:active { opacity: .78; }
-  .save[data-done="1"] { background: transparent; color: var(--signal); box-shadow: inset 0 0 0 1px var(--signal); }
+  .save:active { opacity: .8; }
+  .save[data-done="1"] {
+    background: transparent; color: var(--accent);
+    box-shadow: inset 0 0 0 1.5px var(--accent);
+  }
+  .share {
+    width: 3.25rem; flex: none;
+    border: 0; border-radius: 999px;
+    background: var(--press); color: var(--ink);
+    display: grid; place-items: center;
+    cursor: pointer; -webkit-appearance: none; appearance: none;
+    transition: opacity .12s ease;
+  }
+  .share:active { opacity: .7; }
+  .share svg { width: 1.25rem; height: 1.25rem; }
 
-  /* ---- Contact rows: hairlines, not cards ---- */
-  .rows { border-top: 1px solid var(--hairline); }
-
-  .row {
-    display: block;
-    padding: 1.0625rem 0;
-    border-bottom: 1px solid var(--hairline);
-    color: inherit;
-    text-decoration: none;
+  /* ---- Channel grid ---- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: .25rem;
+    padding: 1.25rem .75rem 1.5rem;
+    border-top: 1px solid var(--hairline);
+  }
+  .tile {
+    display: flex; flex-direction: column; align-items: center; gap: .5rem;
+    padding: .875rem .5rem;
+    border-radius: 14px;
+    color: inherit; text-decoration: none;
     transition: background-color .12s ease;
   }
-  .row:active { background-color: var(--press); }
-
-  .row .label {
-    display: block;
-    font-family: var(--mono);
-    font-size: 0.75rem;
-    letter-spacing: 0.02em;
-    color: var(--muted);
+  .tile:active { background-color: var(--press); }
+  .tile .glyph {
+    width: 3.375rem; height: 3.375rem;
+    border-radius: 17px;
+    display: grid; place-items: center;
+    color: #fff;
+    box-shadow: 0 2px 8px -2px rgba(16,21,28,.35);
   }
-  .row .value {
-    display: block;
-    margin-top: 0.1875rem;
-    font-size: 1rem;
-    letter-spacing: -0.01em;
-    overflow-wrap: anywhere;
-  }
-
-  footer {
-    margin-top: 2.5rem;
-    font-family: var(--mono);
-    font-size: 0.6875rem;
-    color: var(--muted);
-    opacity: .7;
+  .tile .glyph svg { width: 1.75rem; height: 1.75rem; }
+  .tile .label { font-size: .8125rem; font-weight: 500; letter-spacing: -0.005em; }
+  .tile .sub {
+    font-size: .6875rem; color: var(--muted);
+    max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
 
   /* ---- Accessibility ---- */
-  :focus-visible {
-    outline: 2px solid var(--signal);
-    outline-offset: 3px;
-    border-radius: 2px;
-  }
-
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
   .sr-only {
-    position: absolute; width: 1px; height: 1px;
-    padding: 0; margin: -1px; overflow: hidden;
-    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
   }
-
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
-      transition-duration: 0.01ms !important;
-      animation-duration: 0.01ms !important;
+      transition-duration: .01ms !important;
+      animation-duration: .01ms !important;
       animation-iteration-count: 1 !important;
-      scroll-behavior: auto !important;
     }
   }
 </style>
 </head>
 <body>
 
-<main>
-  <h1 id="name"></h1>
-  <p class="meta" id="meta"></p>
+<main class="card">
+  <div class="banner" aria-hidden="true"></div>
 
-  <button class="save" id="save" type="button">Save contact</button>
+  <div class="identity">
+    <div class="avatar" id="avatar"></div>
+    <h1 id="name"></h1>
+    <p class="role" id="role"></p>
+    <p class="tagline" id="tagline"></p>
+    <p class="place" id="place" hidden></p>
+  </div>
+
+  <div class="actions">
+    <button class="save" id="save" type="button">Save contact</button>
+    <button class="share" id="share" type="button" aria-label="Share this card" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3v13M12 3 8 7M12 3l4 4"/>
+        <path d="M5 13v5.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V13"/>
+      </svg>
+    </button>
+  </div>
+
   <p class="sr-only" role="status" aria-live="polite" id="status"></p>
 
-  <nav class="rows" id="rows" aria-label="Contact"></nav>
-
-  <footer id="footer"></footer>
+  <nav class="grid" id="grid" aria-label="Ways to reach me"></nav>
 </main>
 
 <noscript>
-  <p style="padding:0 1.375rem 2rem;font-family:monospace;color:#8A9099">
+  <p style="max-width:27rem;margin:1rem auto;text-align:center;color:#667085">
     This card needs JavaScript to render. Email: ingeduardoromero&#64;gmail.com
   </p>
 </noscript>
@@ -201,8 +263,7 @@
      Leave any string empty ("") to hide that item entirely.
      ===================================================================== */
   var CONFIG = {
-    // Hero. `full` is what's displayed; the parts below are only for the
-    // vCard's structured N: field (family;given;additional).
+    // `full` is displayed; the parts below build the vCard's structured N: field.
     name: {
       full:       "Eduardo Angel Romero Diaz",
       given:      "Eduardo",
@@ -210,17 +271,29 @@
       family:     "Romero Diaz"
     },
 
+    initials: "ER",            // shown in the circle when `photo` is empty
+    photo:    "",              // e.g. "me.jpg" next to index.html, or a data: URI
+
     role:     "Master of Software Engineering",
+    tagline:  "Tap Save contact and skip the typing.",
     location: "",              // e.g. "Mexico City, Mexico" — hidden while empty
     org:      "",              // vCard ORG field — hidden while empty
 
     email: "ingeduardoromero@gmail.com",
 
-    // Keep full international format. `display` is what the visitor reads;
-    // `dial` is what the phone actually calls and what goes in the vCard.
+    // Full international format. `display` is read by the visitor, `dial` is
+    // what the phone actually calls and what goes into the vCard.
     phone: {
       display: "+52 55 4363 4088",
       dial:    "+525543634088"
+    },
+
+    // WhatsApp wants digits only — no +, no spaces. Mexican mobiles are
+    // sometimes registered with a 1 after the country code: if wa.me/52...
+    // says the number is invalid, try "5215543634088" instead.
+    whatsapp: {
+      number:  "525543634088",
+      message: ""              // optional pre-filled first message
     },
 
     linkedin: {
@@ -228,69 +301,124 @@
       display: "eduardo-angel-romero"
     },
 
-    // Set `url` to show a GitHub row, e.g.
+    // Fill both fields to add a tile, e.g.
     // github: { url: "https://github.com/ingeduardoromero", display: "ingeduardoromero" },
-    github: { url: "", display: "" },
-
+    github:  { url: "", display: "" },
     website: { url: "", display: "" },
 
-    vcardFilename: "Eduardo-Angel-Romero-Diaz.vcf",
-    footerNote:    ""          // optional quiet line at the bottom; hidden while empty
+    vcardFilename: "Eduardo-Angel-Romero-Diaz.vcf"
   };
   /* ================== end CONFIG — nothing below needs editing ========== */
 
   var $ = function (id) { return document.getElementById(id); };
+  var SVGNS = "http://www.w3.org/2000/svg";
 
-  /* ---- Render -------------------------------------------------------- */
+  /* ---- Icons: simplified glyphs, drawn here rather than borrowed -------- */
+  var ICONS = {
+    mail:  '<path d="M3.6 7.2A2.6 2.6 0 0 1 6.2 4.6h11.6a2.6 2.6 0 0 1 2.6 2.6v9.6a2.6 2.6 0 0 1-2.6 2.6H6.2a2.6 2.6 0 0 1-2.6-2.6z" fill="none" stroke="currentColor" stroke-width="1.7"/>'
+         + '<path d="m4.6 7.6 7.4 5.4 7.4-5.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
+    phone: '<path d="M7.1 3.4h2.6l1.5 3.8-1.9 1.3a11.6 11.6 0 0 0 5.2 5.2l1.3-1.9 3.8 1.5v2.6a2 2 0 0 1-2.2 2A16.2 16.2 0 0 1 5.1 5.6a2 2 0 0 1 2-2.2z" fill="currentColor"/>',
+    wa:    '<path d="M12 2.9a9 9 0 0 0-7.7 13.7L3 21.4l4.9-1.3A9 9 0 1 0 12 2.9z" fill="currentColor"/>'
+         + '<path d="M8.6 7.2h1.7l1 2.5-1.3.9a7.6 7.6 0 0 0 3.4 3.4l.9-1.3 2.5 1v1.7a1.4 1.4 0 0 1-1.5 1.4A10.6 10.6 0 0 1 7.2 8.7a1.4 1.4 0 0 1 1.4-1.5z" fill="var(--wa)"/>',
+    li:    '<path d="M4.6 8.6h2.9v10.8H4.6z" fill="currentColor"/>'
+         + '<circle cx="6.05" cy="5.4" r="1.75" fill="currentColor"/>'
+         + '<path d="M10.1 8.6H13v1.5a3.4 3.4 0 0 1 3-1.7c2.4 0 3.9 1.6 3.9 4.6v6.4h-2.9v-5.9c0-1.5-.6-2.4-1.9-2.4-1.1 0-1.7.7-2 1.5-.1.3-.1.7-.1 1v5.8h-2.9z" fill="currentColor"/>',
+    globe: '<circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="1.7"/>'
+         + '<path d="M3.4 12h17.2M12 3.4a13 13 0 0 1 0 17.2 13 13 0 0 1 0-17.2z" fill="none" stroke="currentColor" stroke-width="1.7"/>',
+    code:  '<path d="m8.8 8.4-4 3.6 4 3.6M15.2 8.4l4 3.6-4 3.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>'
+         + '<path d="m13.4 5.6-2.8 12.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
+    pin:   '<path d="M12 21s6.5-6 6.5-10.5a6.5 6.5 0 1 0-13 0C5.5 15 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.8"/>'
+         + '<circle cx="12" cy="10.5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/>'
+  };
+
+  function svg(paths, cls) {
+    var s = document.createElementNS(SVGNS, "svg");
+    s.setAttribute("viewBox", "0 0 24 24");
+    s.setAttribute("aria-hidden", "true");
+    if (cls) { s.setAttribute("class", cls); }
+    s.innerHTML = paths;
+    return s;
+  }
+
+  /* ---- Render ---------------------------------------------------------- */
+
+  var avatar = $("avatar");
+  if (CONFIG.photo) {
+    var img = document.createElement("img");
+    img.src = CONFIG.photo;
+    img.alt = CONFIG.name.full;
+    avatar.appendChild(img);
+  } else {
+    var mono = document.createElement("span");
+    mono.className = "mono";
+    mono.textContent = CONFIG.initials;
+    mono.setAttribute("aria-hidden", "true");
+    avatar.appendChild(mono);
+  }
 
   $("name").textContent = CONFIG.name.full;
 
-  var metaBits = [CONFIG.role, CONFIG.location, CONFIG.org].filter(Boolean);
-  var meta = $("meta");
-  metaBits.forEach(function (bit, i) {
-    if (i) {
-      var sep = document.createElement("span");
-      sep.className = "sep";
-      sep.setAttribute("aria-hidden", "true");
-      sep.textContent = "/";
-      meta.appendChild(sep);
-    }
-    meta.appendChild(document.createTextNode(bit));
-  });
-  if (!metaBits.length) { meta.hidden = true; }
+  var roleBits = [CONFIG.role, CONFIG.org].filter(Boolean);
+  if (roleBits.length) { $("role").textContent = roleBits.join(" · "); }
+  else { $("role").hidden = true; }
 
-  function addRow(label, value, href) {
-    if (!value || !href) { return; }
+  if (CONFIG.tagline) { $("tagline").textContent = CONFIG.tagline; }
+  else { $("tagline").hidden = true; }
+
+  if (CONFIG.location) {
+    var place = $("place");
+    place.hidden = false;
+    place.appendChild(svg(ICONS.pin));
+    place.appendChild(document.createTextNode(CONFIG.location));
+  }
+
+  function addTile(opts) {
+    if (!opts.href) { return; }
     var a = document.createElement("a");
-    a.className = "row";
-    a.href = href;
-    if (/^https?:/.test(href)) { a.rel = "noopener"; a.target = "_blank"; }
+    a.className = "tile";
+    a.href = opts.href;
+    if (/^https?:/.test(opts.href)) { a.rel = "noopener"; a.target = "_blank"; }
+    a.setAttribute("aria-label", opts.label + ": " + opts.sub);
+
+    var g = document.createElement("span");
+    g.className = "glyph";
+    g.style.background = opts.color;
+    g.appendChild(svg(opts.icon));
 
     var l = document.createElement("span");
     l.className = "label";
-    l.textContent = label;
+    l.textContent = opts.label;
 
-    var v = document.createElement("span");
-    v.className = "value";
-    v.textContent = value;
+    var s = document.createElement("span");
+    s.className = "sub";
+    s.textContent = opts.sub;
 
-    a.appendChild(l);
-    a.appendChild(v);
-    $("rows").appendChild(a);
+    a.appendChild(g); a.appendChild(l); a.appendChild(s);
+    $("grid").appendChild(a);
   }
 
-  addRow("Email",    CONFIG.email,             CONFIG.email ? "mailto:" + CONFIG.email : "");
-  addRow("Phone",    CONFIG.phone.display,     CONFIG.phone.dial ? "tel:" + CONFIG.phone.dial : "");
-  addRow("LinkedIn", CONFIG.linkedin.display,  CONFIG.linkedin.url);
-  addRow("GitHub",   CONFIG.github.display,    CONFIG.github.url);
-  addRow("Website",  CONFIG.website.display,   CONFIG.website.url);
+  function waHref() {
+    if (!CONFIG.whatsapp.number) { return ""; }
+    return "https://wa.me/" + CONFIG.whatsapp.number
+         + (CONFIG.whatsapp.message ? "?text=" + encodeURIComponent(CONFIG.whatsapp.message) : "");
+  }
 
-  if (CONFIG.footerNote) { $("footer").textContent = CONFIG.footerNote; }
-  else { $("footer").hidden = true; }
+  addTile({ label: "WhatsApp", sub: CONFIG.phone.display, icon: ICONS.wa,
+            color: "var(--wa)", href: waHref() });
+  addTile({ label: "Call", sub: CONFIG.phone.display, icon: ICONS.phone,
+            color: "var(--tel)", href: CONFIG.phone.dial ? "tel:" + CONFIG.phone.dial : "" });
+  addTile({ label: "Email", sub: CONFIG.email, icon: ICONS.mail,
+            color: "var(--accent)", href: CONFIG.email ? "mailto:" + CONFIG.email : "" });
+  addTile({ label: "LinkedIn", sub: CONFIG.linkedin.display, icon: ICONS.li,
+            color: "var(--li)", href: CONFIG.linkedin.url });
+  addTile({ label: "GitHub", sub: CONFIG.github.display, icon: ICONS.code,
+            color: "#24292F", href: CONFIG.github.url });
+  addTile({ label: "Website", sub: CONFIG.website.display, icon: ICONS.globe,
+            color: "#0E7C86", href: CONFIG.website.url });
 
-  /* ---- vCard 3.0 ------------------------------------------------------ */
+  /* ---- vCard 3.0 ------------------------------------------------------- */
 
-  // RFC 2426 §2.4.2: backslash, comma and semicolon are escaped in values.
+  // RFC 2426 2.4.2: backslash, comma and semicolon are escaped in values.
   function esc(s) {
     return String(s || "").replace(/\\/g, "\\\\")
                           .replace(/\n/g, "\\n")
@@ -298,7 +426,7 @@
                           .replace(/;/g, "\\;");
   }
 
-  // RFC 2426 §2.6: fold long lines at 75 octets, continuations start with a space.
+  // RFC 2426 2.6: fold long lines at 75 octets, continuations start with a space.
   function fold(line) {
     if (line.length <= 75) { return line; }
     var out = line.slice(0, 75), rest = line.slice(75);
@@ -318,11 +446,12 @@
       "FN:" + esc(n.full)
     ];
 
-    if (CONFIG.org)      { lines.push("ORG:" + esc(CONFIG.org)); }
-    if (CONFIG.role)     { lines.push("TITLE:" + esc(CONFIG.role)); }
-    if (CONFIG.email)    { lines.push("EMAIL;TYPE=INTERNET,PREF:" + esc(CONFIG.email)); }
-    if (CONFIG.phone.dial) {
-      lines.push("TEL;TYPE=CELL,VOICE:" + esc(CONFIG.phone.dial));
+    if (CONFIG.org)   { lines.push("ORG:" + esc(CONFIG.org)); }
+    if (CONFIG.role)  { lines.push("TITLE:" + esc(CONFIG.role)); }
+    if (CONFIG.email) { lines.push("EMAIL;TYPE=INTERNET,PREF:" + esc(CONFIG.email)); }
+    if (CONFIG.phone.dial) { lines.push("TEL;TYPE=CELL,VOICE:" + esc(CONFIG.phone.dial)); }
+    if (CONFIG.whatsapp.number) {
+      lines.push("X-SOCIALPROFILE;TYPE=whatsapp:https://wa.me/" + esc(CONFIG.whatsapp.number));
     }
     if (CONFIG.website.url) { lines.push("URL:" + esc(CONFIG.website.url)); }
     if (CONFIG.linkedin.url) {
@@ -341,12 +470,10 @@
     return lines.map(fold).join("\r\n") + "\r\n";
   }
 
-  /* ---- Download ------------------------------------------------------- */
+  /* ---- Save contact ---------------------------------------------------- */
 
-  var btn = $("save");
-  var status = $("status");
-  var defaultLabel = btn.textContent;
-  var resetTimer;
+  var btn = $("save"), status = $("status");
+  var defaultLabel = btn.textContent, resetTimer;
 
   btn.addEventListener("click", function () {
     var blob = new Blob([buildVCard()], { type: "text/vcard;charset=utf-8" });
@@ -372,6 +499,23 @@
       status.textContent = "";
     }, 4000);
   });
+
+  /* ---- Share this card ------------------------------------------------- */
+
+  var share = $("share");
+  if (navigator.share || navigator.clipboard) {
+    share.hidden = false;
+    share.addEventListener("click", function () {
+      var payload = { title: CONFIG.name.full, text: CONFIG.role, url: location.href };
+      if (navigator.share) {
+        navigator.share(payload).catch(function () { /* dismissed — nothing to do */ });
+      } else {
+        navigator.clipboard.writeText(location.href).then(function () {
+          status.textContent = "Link copied";
+        });
+      }
+    });
+  }
 })();
 </script>
 </body>

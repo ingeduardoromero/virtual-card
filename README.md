@@ -19,7 +19,8 @@ separator. To add a GitHub or website row, fill in its `url` and `display`.
 - **Save contact** builds a vCard 3.0 in the browser and downloads it as a
   `.vcf`, so the visitor lands in their contacts app.
 - Phone numbers should stay in full international format so `tel:` links and the
-  vCard work from any country.
+  vCard work from any country. WhatsApp is separate and wants digits only, no `+`.
+- The avatar falls back to `initials` until you set `photo`.
 - Deployed by `.github/workflows/pages.yml` on every push to `main`. The
   workflow enables Pages itself on first run, so the repository's Pages source
   is *GitHub Actions*, not a branch. It publishes `index.html` plus any image
