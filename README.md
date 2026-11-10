@@ -12,19 +12,34 @@ no requests after the page itself, so it paints instantly on mobile data.
 
 ## Make your own
 
-**With an AI coding agent.** Use this repo as a template, open your copy in
-[Claude Code](https://claude.com/claude-code) or
-[Gemini CLI](https://github.com/google-gemini/gemini-cli), and run:
+**With an AI coding agent.** Paste this into
+[Claude Code](https://claude.com/claude-code), Google
+[Antigravity](https://antigravity.google) (the app, or `agy` in a terminal),
+or any coding agent that can run commands:
 
-```
-/make-card
+```text
+Make me my own digital business card from the GitHub template
+ingeduardoromero/virtual-card.
+
+1. Check the GitHub CLI is installed and signed in (`gh auth status`).
+   If it isn't, walk me through installing it and `gh auth login`.
+2. Create my copy and go into it:
+   gh repo create my-card --template ingeduardoromero/virtual-card --public --clone
+   cd my-card
+3. Turn on GitHub Pages, deployed by GitHub Actions:
+   gh api -X POST "repos/{owner}/{repo}/pages" -f build_type=workflow
+4. Follow .agents/skills/make-card/SKILL.md exactly. card.json still holds
+   the template author's details: start from blank, ask me for mine, and
+   don't invent anything.
 ```
 
-It asks for your details, never makes any up, builds and tests the card,
-shows you a preview, and publishes it when you say so. Other coding agents can
-follow the same steps from [`AGENTS.md`](AGENTS.md). (Chat apps like the
-Gemini or Claude websites can't do this part: the agent needs to edit files
-and push to GitHub.)
+Change `my-card` if you want a different address. Your card ends up at
+`https://<your-username>.github.io/my-card/`.
+
+Already have your copy open? Just run `/make-card`. The agent asks for your
+details, never makes any up, builds and tests the card, shows you a preview,
+and publishes it when you say so. (Chat apps like the Gemini or Claude
+websites can't do this: the agent has to run commands and push to GitHub.)
 
 **By hand.** Use this repo as a template, then edit `card.json` on GitHub and
 commit. The workflow rebuilds `index.html`, runs the tests and publishes.
@@ -86,7 +101,6 @@ edits.
 | `qr/` | Full-screen QR page |
 | `.github/workflows/pages.yml` | Build, test and deploy on every push to `main` |
 | `.agents/skills/make-card/` | The `/make-card` agent workflow (copied to `.claude/skills/` for Claude Code) |
-| `.gemini/commands/` | `/make-card` for Gemini CLI |
 
 **Save contact** builds a vCard 3.0 in the browser (RFC 2426 escaping and line
 folding) and downloads it as a `.vcf`. Link previews, the page title and the

@@ -116,8 +116,16 @@ to `main`. `.github/workflows/pages.yml` builds, tests and deploys on every push
 The live card is at `https://<owner>.github.io/<repo>/` (or
 `https://<owner>.github.io/` when the repository is named `<owner>.github.io`).
 
-First deploy on a new repository — tell them what to check if it doesn't go
-live in a couple of minutes:
+**First deploy on a new repository.** If the GitHub CLI is installed and signed
+in (`gh auth status`), turn Pages on before the first push, with GitHub Actions
+as the source:
+
+```sh
+gh api -X POST "repos/{owner}/{repo}/pages" -f build_type=workflow
+```
+
+(A "409 already exists" reply means it's already on; that's fine.) Otherwise,
+or if it doesn't go live in a couple of minutes, tell them what to check:
 
 1. **Forked repositories have Actions switched off.** Actions tab → enable
    workflows, then run "Deploy card to Pages" (or push again).
