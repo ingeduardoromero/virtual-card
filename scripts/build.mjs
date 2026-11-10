@@ -2,21 +2,22 @@
 // Builds index.html from card.json + src/card.html. No dependencies; Node 18+.
 //
 //   node scripts/build.mjs            validate card.json and write index.html
-//   node scripts/build.mjs --check    exit 1 if index.html is out of date
 //   node scripts/build.mjs --url https://example.com/card/   (only off GitHub Pages)
 //
-// index.html stays a single self-contained file: the card data is inlined,
-// so the page makes no requests after the document itself.
+// card.json and index.html hold personal details, so neither is committed:
+// card.json lives on your machine and in the CARD_JSON repository secret,
+// and the deploy workflow builds index.html from that secret.
+//
+// index.html is a single self-contained file: the card data is inlined, so
+// the page makes no requests after the document itself.
 
 import { readFileSync, writeFileSync, existsSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
-const CHECK = args.includes("--check");
 const flag = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] || "" : "");
 const urlArg = flag("--url");
 const cardFile = flag("--card") || join(ROOT, "card.json");   // --card/--out are for tests
@@ -67,14 +68,31 @@ function conform(value, shape, path) {
 
 /* ---- Load ------------------------------------------------------------- */
 
+const CI = Boolean(process.env.GITHUB_ACTIONS);
+// Actions logs on a public repository are public: don't echo personal values there.
+const show = (v) => (CI ? "(value hidden in CI logs)" : `"${v}"`);
+
+if (!existsSync(cardFile)) {
+  console.error("No card.json yet. Copy card.example.json to card.json and put your details in it " +
+                "(or run /make-card). It stays on your machine: .gitignore keeps it out of the repository.");
+  process.exit(1);
+}
+const rawText = readFileSync(cardFile, "utf8");
 let raw;
 try {
-  raw = JSON.parse(readFileSync(cardFile, "utf8"));
+  raw = JSON.parse(rawText);
 } catch (e) {
-  console.error(`card.json could not be read: ${e.message}`);
+  console.error(`card.json isn't valid JSON: ${e.message}`);
   process.exit(1);
 }
 const card = conform(raw, SHAPE, "");
+
+// The deploy reads card.json from a GitHub secret, and secrets hold at most 48 KB.
+const kb = Buffer.byteLength(rawText) / 1024;
+if (kb > 48) {
+  errors.push(`card.json is ${Math.round(kb)} KB; GitHub secrets hold up to 48 KB. ` +
+              "Shrink the photo (about 256×256 and under 25 KB), or use an https:// photo URL.");
+}
 
 /* ---- Validate and fill defaults -------------------------------------- */
 
@@ -91,12 +109,12 @@ if (!card.initials) {
 }
 if (card.initials.length > 3) { errors.push("initials should be 1–3 letters."); }
 
-if (card.email && !EMAIL.test(card.email)) { errors.push(`email "${card.email}" doesn't look like an email address.`); }
+if (card.email && !EMAIL.test(card.email)) { errors.push(`email ${show(card.email)} doesn't look like an email address.`); }
 
 if (card.phone.dial) {
   const compact = card.phone.dial.replace(/[\s().-]/g, "");
   if (!E164.test(compact)) {
-    errors.push(`phone.dial "${card.phone.dial}" must be + country code and number, e.g. "+525543634088".`);
+    errors.push(`phone.dial ${show(card.phone.dial)} must be + country code and number, e.g. "+12025550123".`);
   }
   card.phone.dial = compact;
   if (!card.phone.display) { card.phone.display = card.phone.dial; }
@@ -108,8 +126,8 @@ if (card.whatsapp.number) {
   const n = card.whatsapp.number;
   if (!DIGITS.test(n)) {
     const fixed = n.replace(/\D/g, "");
-    errors.push(`whatsapp.number "${n}" must be digits only, country code first` +
-                (DIGITS.test(fixed) ? ` — use "${fixed}".` : "."));
+    errors.push(`whatsapp.number ${show(n)} must be digits only, country code first` +
+                (DIGITS.test(fixed) ? ` — use ${show(fixed)}.` : "."));
   }
 } else if (card.whatsapp.message) {
   warnings.push("whatsapp.message is set but whatsapp.number is empty, so there is no WhatsApp tile.");
@@ -126,7 +144,7 @@ for (const key of ["linkedin", "github", "website"]) {
   const link = card[key];
   if (link.url) {
     if (!/^https:\/\/[^\s/]+\.[^\s]+$/.test(link.url)) {
-      errors.push(`${key}.url "${link.url}" must be a full https:// address.`);
+      errors.push(`${key}.url ${show(link.url)} must be a full https:// address.`);
     }
     if (!link.display) { link.display = defaultDisplay(link.url); }
   } else if (link.display) {
@@ -134,14 +152,20 @@ for (const key of ["linkedin", "github", "website"]) {
   }
 }
 if (card.linkedin.url && !/linkedin\.com\//i.test(card.linkedin.url)) {
-  warnings.push(`linkedin.url "${card.linkedin.url}" isn't a linkedin.com address.`);
+  warnings.push(`linkedin.url ${show(card.linkedin.url)} isn't a linkedin.com address.`);
 }
 if (card.github.url && !/github\.com\//i.test(card.github.url)) {
-  warnings.push(`github.url "${card.github.url}" isn't a github.com address.`);
+  warnings.push(`github.url ${show(card.github.url)} isn't a github.com address.`);
 }
 
 function checkLocalFile(field, value, maxKB) {
-  if (!value || /^(https:|data:)/.test(value)) { return; }
+  if (!value || /^https:/.test(value)) { return; }
+  if (/^data:/.test(value)) {
+    if (!/^data:image\/(png|jpeg|webp|svg\+xml);base64,/.test(value)) {
+      errors.push(`${field} must be a base64 image data: URI (png, jpeg, webp or svg).`);
+    }
+    return;
+  }
   if (/^[a-z]+:/i.test(value) || value.includes("..") || value.startsWith("/")) {
     errors.push(`${field} "${value}" must be a file next to index.html or an https:// URL.`); return;
   }
@@ -179,49 +203,6 @@ function currentRepo() {
 }
 const repo = currentRepo();
 
-/* ---- Copies must not publish the template author's card --------------- */
-
-// This repository is a template. Until a copy replaces the details in
-// card.json, building it would publish the original author's card under
-// someone else's address. Stored as one-way fingerprints so the details
-// aren't duplicated here; update them if the author's details change.
-const TEMPLATE_REPO = "ingeduardoromero/virtual-card";
-const TEMPLATE_AUTHOR = "Eduardo Angel Romero Diaz";
-const TEMPLATE_FINGERPRINTS = {
-  "name.full": "6ef7ae88aef71be2",
-  "email": "b64460e875ccdaa3",
-  "phone.dial": "63cd5379cd7d0906",
-  "whatsapp.number": "813b998a1460f046",
-  "linkedin.url": "d3d01fd98bdd8489"
-};
-
-const fingerprint = (field, value) =>
-  createHash("sha256").update(`${field}:${value}`).digest("hex").slice(0, 16);
-
-function templateDetailsLeft() {
-  const values = {
-    "name.full": card.name.full.toLowerCase(),
-    "email": card.email.toLowerCase(),
-    "phone.dial": card.phone.dial,
-    "whatsapp.number": card.whatsapp.number,
-    "linkedin.url": card.linkedin.url.toLowerCase().replace(/\/+$/, "")
-  };
-  return Object.keys(TEMPLATE_FINGERPRINTS)
-    .filter((f) => values[f] && fingerprint(f, values[f]) === TEMPLATE_FINGERPRINTS[f]);
-}
-
-if (repo.toLowerCase() !== TEMPLATE_REPO) {
-  const left = templateDetailsLeft();
-  if (left.length) {
-    const msg = `card.json still has ${TEMPLATE_AUTHOR}'s details (${left.join(", ")}), ` +
-      `so this copy would publish their card, not yours. Replace them with your own ` +
-      `details — or run /make-card — and leave any field you don't want as "".`;
-    if (process.env.GITHUB_ACTIONS) { console.log(`::error title=Card not published::${msg}`); }
-    console.error(msg);
-    process.exit(1);
-  }
-}
-
 /* ---- Where the card lives (for link previews) ------------------------ */
 
 function siteUrl() {
@@ -242,6 +223,7 @@ if (url && !/^https?:\/\/[^\s]+\/$/.test(url)) { errors.push(`site.url "${url}" 
 if (!url) { warnings.push("No public URL found — set site.url so link previews and the canonical tag are filled in."); }
 
 if (errors.length) {
+  if (CI) { console.log(`::error title=card.json needs fixing::${errors.join(" · ")}`); }
   console.error("card.json needs fixing:\n" + errors.map((e) => "  ✗ " + e).join("\n"));
   if (warnings.length) { console.error(warnings.map((w) => "  ! " + w).join("\n")); }
   process.exit(1);
@@ -328,20 +310,8 @@ for (const [re, value] of markers) {
   html = html.replace(re, () => value);
 }
 
-/* ---- Write or check --------------------------------------------------- */
-
-const current = existsSync(outFile) ? readFileSync(outFile, "utf8") : "";
+/* ---- Write ------------------------------------------------------------ */
 
 for (const w of warnings) { console.warn("  ! " + w); }
-
-if (CHECK) {
-  if (current !== html) {
-    console.error("index.html is out of date — run: node scripts/build.mjs");
-    process.exit(1);
-  }
-  console.log("index.html is up to date.");
-} else {
-  if (current !== html) { writeFileSync(outFile, html); }
-  console.log(`${current === html ? "Unchanged" : "Built"} index.html for ${full}` +
-              ` — ${channels.length} ways to reach you` + (url ? `, published at ${url}` : "") + ".");
-}
+writeFileSync(outFile, html);
+console.log(`Built index.html — ${channels.length} ways to reach you` + (url ? `, for ${url}` : "") + ".");

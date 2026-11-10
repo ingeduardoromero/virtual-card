@@ -1,0 +1,38 @@
+{
+  "$schema": "./card.schema.json",
+
+  "name": {
+    "full": "Alex Rivera",
+    "given": "Alex",
+    "additional": "",
+    "family": "Rivera"
+  },
+  "initials": "",
+  "photo": "",
+
+  "role": "Product Designer",
+  "org": "",
+  "tagline": "Tap Save contact and skip the typing.",
+  "location": "",
+
+  "email": "alex@example.com",
+  "phone": {
+    "display": "+1 202 555 0123",
+    "dial": "+12025550123"
+  },
+  "whatsapp": {
+    "number": "12025550123",
+    "message": ""
+  },
+  "linkedin": {
+    "url": "https://www.linkedin.com/in/example",
+    "display": ""
+  },
+  "github": { "url": "", "display": "" },
+  "website": { "url": "", "display": "" },
+
+  "site": {
+    "url": "",
+    "previewImage": ""
+  }
+}

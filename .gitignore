@@ -1,0 +1,4 @@
+# Personal details: kept on your machine and in the CARD_JSON repository
+# secret, never in the repository. The deploy workflow builds index.html.
+card.json
+index.html

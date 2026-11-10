@@ -2,11 +2,14 @@
 // Tests the build and the card's own script, with no browser and no dependencies.
 //   node scripts/test.mjs
 //
+// Uses the fictional card.example.json, never your card.json, so it runs the
+// same everywhere — including in CI before your details are written.
+//
 // The page script runs inside a tiny fake DOM, so the vCard checked here is the
 // exact one a visitor's phone would download.
 
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, readFileSync, rmSync, cpSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,12 +24,16 @@ function ok(cond, label) {
   if (cond) { passed++; } else { failed++; console.error("  ✗ " + label); }
 }
 
+// Run builds as if on a laptop unless a test says otherwise.
+const localEnv = { ...process.env };
+delete localEnv.GITHUB_ACTIONS;
+
 function build(card, extra = [], env = {}) {
   const cardFile = join(tmp, "card.json"), out = join(tmp, "index.html");
   writeFileSync(cardFile, JSON.stringify(card));
   try {
     const log = execFileSync("node", [BUILD, "--card", cardFile, "--out", out, "--url", "https://example.test/card/", ...extra],
-                             { stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, ...env } }).toString();
+                             { stdio: ["ignore", "pipe", "pipe"], env: { ...localEnv, ...env } }).toString();
     return { ok: true, html: readFileSync(out, "utf8"), log };
   } catch (e) {
     return { ok: false, log: e.stderr.toString() + e.stdout.toString() };
@@ -65,13 +72,13 @@ function run(html) {
   return { els, tiles, vcard: blob, downloadName };
 }
 
-const base = JSON.parse(readFileSync(join(ROOT, "card.json"), "utf8"));
+const base = JSON.parse(readFileSync(join(ROOT, "card.example.json"), "utf8"));
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
-/* ---- The real card.json builds and renders ---------------------------- */
+/* ---- The example card builds and renders ------------------------------ */
 {
   const r = build(base);
-  ok(r.ok, "card.json builds: " + r.log);
+  ok(r.ok, "card.example.json builds: " + r.log);
   if (r.ok) {
     const { tiles, vcard, downloadName } = run(r.html);
     ok(tiles.length >= 1, "at least one contact tile renders");
@@ -150,8 +157,8 @@ const clone = (o) => JSON.parse(JSON.stringify(o));
 
 /* ---- Bad input is rejected with a useful message ----------------------- */
 const rejects = [
-  ["whatsapp number with + and spaces", (c) => { c.whatsapp.number = "+52 55 4363 4088"; }, /digits only.*"525543634088"/],
-  ["phone without country code", (c) => { c.phone.dial = "5543634088"; }, /phone\.dial/],
+  ["whatsapp number with + and spaces", (c) => { c.whatsapp.number = "+1 202 555 0123"; }, /digits only.*"12025550123"/],
+  ["phone without country code", (c) => { c.phone.dial = "2025550123"; }, /phone\.dial/],
   ["misspelled field", (c) => { c.linkdin = c.linkedin; }, /linkdin is not a known field.*linkedin/],
   ["missing family name", (c) => { c.name.family = ""; }, /name\.family is required/],
   ["http (not https) link", (c) => { c.website = { url: "http://example.com", display: "" }; }, /website\.url/],
@@ -166,52 +173,23 @@ for (const [label, mutate, message] of rejects) {
   ok(!r.ok && message.test(r.log), `rejects ${label} — got: ${r.log.trim()}`);
 }
 
-/* ---- The committed index.html matches card.json ------------------------- */
-try {
-  execFileSync("node", [BUILD, "--check"], { stdio: "pipe" });
-  ok(true, "");
-} catch {
-  ok(false, "index.html is out of date — run: node scripts/build.mjs");
+/* ---- CI logs never show personal values -------------------------------- */
+{
+  const c = clone(base); c.email = "not-an-email"; c.whatsapp.number = "+1 202 555 0123";
+  const r = build(c, [], { GITHUB_ACTIONS: "true" });
+  ok(!r.ok && !r.log.includes("not-an-email") && !r.log.includes("202 555") && /hidden in CI logs/.test(r.log),
+     "build errors in CI hide the values — got: " + r.log.trim());
+  const good = build(base, [], { GITHUB_ACTIONS: "true" });
+  ok(good.ok && !good.log.includes(base.name.full) && !good.log.includes(base.email),
+     "a successful CI build doesn't print the name or email — got: " + good.log.trim());
 }
 
-/* ---- Copies of the template don't publish the author's card ------------ */
-// Only meaningful in the original repository, where card.json is the author's.
-if (base.name.full === "Eduardo Angel Romero Diaz") {
-  const copy = { GITHUB_REPOSITORY: "someone-else/my-card" };
-
-  let r = build(base, [], copy);
-  ok(!r.ok && /email, phone\.dial, whatsapp\.number, linkedin\.url/.test(r.log) && /name\.full/.test(r.log),
-     "a fresh copy refuses to build the author's card — got: " + r.log.trim());
-
-  const half = clone(base);
-  half.name = { full: "Ana López", given: "Ana", additional: "", family: "López" };
-  half.email = "ana@example.org";
-  r = build(half, [], copy);
-  ok(!r.ok && /phone\.dial/.test(r.log) && !/\bemail\b/.test(r.log) && !/name\.full/.test(r.log),
-     "a half-edited copy names only the fields still left — got: " + r.log.trim());
-
-  const own = clone(half);
-  own.phone = { display: "+34 600 000 000", dial: "+34600000000" };
-  own.whatsapp = { number: "34600000000", message: "" };
-  own.linkedin = { url: "https://www.linkedin.com/in/ana-lopez", display: "" };
-  r = build(own, [], copy);
-  ok(r.ok, "a copy with its own details builds — got: " + r.log.trim());
-
-  r = build(base, [], { GITHUB_REPOSITORY: "IngEduardoRomero/Virtual-Card" });
-  ok(r.ok, "the original repository builds whatever the letter case — got: " + r.log.trim());
-
-  // Downloaded as a ZIP: no git remote, no GITHUB_REPOSITORY, so it can't prove
-  // it's the original and must refuse too.
-  const zip = mkdtempSync(join(tmpdir(), "card-zip-"));
-  for (const f of ["scripts", "src", "card.json"]) { cpSync(join(ROOT, f), join(zip, f), { recursive: true }); }
-  try {
-    const env = { ...process.env }; delete env.GITHUB_REPOSITORY;
-    execFileSync("node", [join(zip, "scripts", "build.mjs")], { cwd: zip, stdio: "pipe", env });
-    ok(false, "a ZIP download with the author's details should refuse to build");
-  } catch (e) {
-    ok(/would publish their card/.test(String(e.stderr)), "a ZIP download refuses too — got: " + String(e.stderr).trim());
-  }
-  rmSync(zip, { recursive: true, force: true });
+/* ---- Personal files stay out of the repository --------------------------- */
+{
+  const ignored = readFileSync(join(ROOT, ".gitignore"), "utf8").split(/\r?\n/);
+  ok(ignored.includes("card.json") && ignored.includes("index.html"), ".gitignore keeps card.json and index.html out of git");
+  ok(!existsSync(join(ROOT, "card.example.json")) || !/@(?!example\.)/.test(readFileSync(join(ROOT, "card.example.json"), "utf8")),
+     "card.example.json only uses example.* addresses");
 }
 
 /* ---- Every agent gets the same make-card instructions ------------------ */

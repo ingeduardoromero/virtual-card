@@ -1,12 +1,20 @@
 name: Deploy card to Pages
 
+# Your details are not in the repository. They live in a repository secret
+# named CARD_JSON (the contents of your local card.json), and this workflow
+# builds index.html from it. Set or update it with:
+#
+#   gh secret set CARD_JSON < card.json && gh workflow run pages.yml
+#
+# or Settings → Secrets and variables → Actions → New repository secret.
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: write   # commit index.html back when card.json was edited on github.com
+  contents: read
   pages: write
   id-token: write
 
@@ -27,23 +35,19 @@ jobs:
         with:
           node-version: 22
 
-      - name: Build index.html from card.json
-        run: node scripts/build.mjs
-
       - name: Test
         run: node scripts/test.mjs
 
-      # Someone edited card.json in the browser and didn't rebuild: commit the
-      # result so the repository always holds a working index.html.
-      - name: Commit rebuilt index.html
+      - name: Build index.html from the CARD_JSON secret
+        env:
+          CARD_JSON: ${{ secrets.CARD_JSON }}
         run: |
-          if ! git diff --quiet -- index.html; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -m "Rebuild index.html from card.json" -- index.html
-            git pull --rebase origin "$GITHUB_REF_NAME"
-            git push origin "HEAD:$GITHUB_REF_NAME"
+          if [ -z "$CARD_JSON" ]; then
+            echo "::error title=No card details yet::Add a repository secret named CARD_JSON containing your card.json (Settings → Secrets and variables → Actions), or run: gh secret set CARD_JSON < card.json — then run this workflow again."
+            exit 1
           fi
+          printf '%s' "$CARD_JSON" > card.json
+          node scripts/build.mjs
 
       - name: Enable and configure Pages
         uses: actions/configure-pages@v5
