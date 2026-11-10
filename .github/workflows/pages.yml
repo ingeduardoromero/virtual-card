@@ -39,6 +39,7 @@ jobs:
           cp index.html _site/
           shopt -s nullglob
           for f in *.png *.jpg *.jpeg *.svg *.webp *.ico; do cp "$f" _site/; done
+          if [ -d qr ]; then cp -r qr _site/; fi
 
       - uses: actions/upload-pages-artifact@v3
         with:
