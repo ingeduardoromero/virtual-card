@@ -58,6 +58,10 @@ its QR page at `…/qr/`.
 
 ### First deploy on a new copy
 
+- **The first run fails on purpose.** A new copy still has my details in
+  `card.json`, and the build refuses to publish them under your address. It
+  names any of my details still left. Once `card.json` is yours, it deploys.
+
 - **Forks have Actions switched off** — open the Actions tab and enable them.
   ("Use this template" copies don't have this problem.)
 - If the *Enable and configure Pages* step fails, set Settings → Pages →

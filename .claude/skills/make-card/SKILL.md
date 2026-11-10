@@ -27,8 +27,10 @@ Read `card.json` and `card.schema.json` (field-by-field rules), and run
 `git remote get-url origin` to learn the GitHub owner and repository name.
 
 If `card.json` holds someone else's details — usually the template author's,
-when the repository was just forked — tell the person and start from blank.
-**Carry nothing over** from another person's card. If it's already theirs,
+when the repository was just copied — tell the person and start from blank.
+**Carry nothing over** from another person's card. (On a copy, the build
+refuses to run while any of the template author's details are left, and names
+the fields.) If it's already theirs,
 you're updating: show the current values and ask only what should change.
 
 ## 2. Interview

@@ -10,6 +10,7 @@
 
 import { readFileSync, writeFileSync, existsSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -164,6 +165,63 @@ if (!card.email && !card.phone.dial && !card.whatsapp.number && !card.linkedin.u
   errors.push("Add at least one way to reach you: email, phone, whatsapp, linkedin, github or website.");
 }
 
+/* ---- Which repository is this? ---------------------------------------- */
+
+function currentRepo() {
+  if (process.env.GITHUB_REPOSITORY) { return process.env.GITHUB_REPOSITORY; }
+  try {
+    const remote = execFileSync("git", ["remote", "get-url", "origin"], { cwd: ROOT, stdio: ["ignore", "pipe", "ignore"] })
+      .toString().trim();
+    const m = remote.match(/github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?\/?$/);
+    if (m) { return `${m[1]}/${m[2]}`; }
+  } catch { /* not a git checkout */ }
+  return "";
+}
+const repo = currentRepo();
+
+/* ---- Copies must not publish the template author's card --------------- */
+
+// This repository is a template. Until a copy replaces the details in
+// card.json, building it would publish the original author's card under
+// someone else's address. Stored as one-way fingerprints so the details
+// aren't duplicated here; update them if the author's details change.
+const TEMPLATE_REPO = "ingeduardoromero/virtual-card";
+const TEMPLATE_AUTHOR = "Eduardo Angel Romero Diaz";
+const TEMPLATE_FINGERPRINTS = {
+  "name.full": "6ef7ae88aef71be2",
+  "email": "b64460e875ccdaa3",
+  "phone.dial": "63cd5379cd7d0906",
+  "whatsapp.number": "813b998a1460f046",
+  "linkedin.url": "d3d01fd98bdd8489"
+};
+
+const fingerprint = (field, value) =>
+  createHash("sha256").update(`${field}:${value}`).digest("hex").slice(0, 16);
+
+function templateDetailsLeft() {
+  const values = {
+    "name.full": card.name.full.toLowerCase(),
+    "email": card.email.toLowerCase(),
+    "phone.dial": card.phone.dial,
+    "whatsapp.number": card.whatsapp.number,
+    "linkedin.url": card.linkedin.url.toLowerCase().replace(/\/+$/, "")
+  };
+  return Object.keys(TEMPLATE_FINGERPRINTS)
+    .filter((f) => values[f] && fingerprint(f, values[f]) === TEMPLATE_FINGERPRINTS[f]);
+}
+
+if (repo.toLowerCase() !== TEMPLATE_REPO) {
+  const left = templateDetailsLeft();
+  if (left.length) {
+    const msg = `card.json still has ${TEMPLATE_AUTHOR}'s details (${left.join(", ")}), ` +
+      `so this copy would publish their card, not yours. Replace them with your own ` +
+      `details — or run /make-card — and leave any field you don't want as "".`;
+    if (process.env.GITHUB_ACTIONS) { console.log(`::error title=Card not published::${msg}`); }
+    console.error(msg);
+    process.exit(1);
+  }
+}
+
 /* ---- Where the card lives (for link previews) ------------------------ */
 
 function siteUrl() {
@@ -173,15 +231,6 @@ function siteUrl() {
   if (existsSync(join(ROOT, "CNAME"))) {
     const host = readFileSync(join(ROOT, "CNAME"), "utf8").trim();
     if (host) { return `https://${host}/`; }
-  }
-  let repo = process.env.GITHUB_REPOSITORY || "";
-  if (!repo) {
-    try {
-      const remote = execFileSync("git", ["remote", "get-url", "origin"], { cwd: ROOT, stdio: ["ignore", "pipe", "ignore"] })
-        .toString().trim();
-      const m = remote.match(/github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?\/?$/);
-      if (m) { repo = `${m[1]}/${m[2]}`; }
-    } catch { /* not a git checkout */ }
   }
   if (!repo) { return ""; }
   const [owner, name] = repo.split("/");

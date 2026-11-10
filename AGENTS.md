@@ -43,6 +43,10 @@ node scripts/test.mjs            # all checks; must pass before pushing
 
 ## Constraints worth keeping
 
+- Copies of this template refuse to build while `card.json` still holds the
+  template author's details (checked by fingerprint in `scripts/build.mjs`).
+  Don't weaken or bypass this; replace the details instead.
+
 - No frameworks, no webfonts, no runtime requests: the card must paint
   instantly on a phone that just scanned a QR code.
 - vCard 3.0 per RFC 2426: escape `\` `,` `;` and newlines in values, fold at 75

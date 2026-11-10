@@ -6,7 +6,7 @@
 // exact one a visitor's phone would download.
 
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readFileSync, rmSync, cpSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,12 +21,12 @@ function ok(cond, label) {
   if (cond) { passed++; } else { failed++; console.error("  ✗ " + label); }
 }
 
-function build(card, extra = []) {
+function build(card, extra = [], env = {}) {
   const cardFile = join(tmp, "card.json"), out = join(tmp, "index.html");
   writeFileSync(cardFile, JSON.stringify(card));
   try {
     const log = execFileSync("node", [BUILD, "--card", cardFile, "--out", out, "--url", "https://example.test/card/", ...extra],
-                             { stdio: ["ignore", "pipe", "pipe"] }).toString();
+                             { stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, ...env } }).toString();
     return { ok: true, html: readFileSync(out, "utf8"), log };
   } catch (e) {
     return { ok: false, log: e.stderr.toString() + e.stdout.toString() };
@@ -172,6 +172,46 @@ try {
   ok(true, "");
 } catch {
   ok(false, "index.html is out of date — run: node scripts/build.mjs");
+}
+
+/* ---- Copies of the template don't publish the author's card ------------ */
+// Only meaningful in the original repository, where card.json is the author's.
+if (base.name.full === "Eduardo Angel Romero Diaz") {
+  const copy = { GITHUB_REPOSITORY: "someone-else/my-card" };
+
+  let r = build(base, [], copy);
+  ok(!r.ok && /email, phone\.dial, whatsapp\.number, linkedin\.url/.test(r.log) && /name\.full/.test(r.log),
+     "a fresh copy refuses to build the author's card — got: " + r.log.trim());
+
+  const half = clone(base);
+  half.name = { full: "Ana López", given: "Ana", additional: "", family: "López" };
+  half.email = "ana@example.org";
+  r = build(half, [], copy);
+  ok(!r.ok && /phone\.dial/.test(r.log) && !/\bemail\b/.test(r.log) && !/name\.full/.test(r.log),
+     "a half-edited copy names only the fields still left — got: " + r.log.trim());
+
+  const own = clone(half);
+  own.phone = { display: "+34 600 000 000", dial: "+34600000000" };
+  own.whatsapp = { number: "34600000000", message: "" };
+  own.linkedin = { url: "https://www.linkedin.com/in/ana-lopez", display: "" };
+  r = build(own, [], copy);
+  ok(r.ok, "a copy with its own details builds — got: " + r.log.trim());
+
+  r = build(base, [], { GITHUB_REPOSITORY: "IngEduardoRomero/Virtual-Card" });
+  ok(r.ok, "the original repository builds whatever the letter case — got: " + r.log.trim());
+
+  // Downloaded as a ZIP: no git remote, no GITHUB_REPOSITORY, so it can't prove
+  // it's the original and must refuse too.
+  const zip = mkdtempSync(join(tmpdir(), "card-zip-"));
+  for (const f of ["scripts", "src", "card.json"]) { cpSync(join(ROOT, f), join(zip, f), { recursive: true }); }
+  try {
+    const env = { ...process.env }; delete env.GITHUB_REPOSITORY;
+    execFileSync("node", [join(zip, "scripts", "build.mjs")], { cwd: zip, stdio: "pipe", env });
+    ok(false, "a ZIP download with the author's details should refuse to build");
+  } catch (e) {
+    ok(/would publish their card/.test(String(e.stderr)), "a ZIP download refuses too — got: " + String(e.stderr).trim());
+  }
+  rmSync(zip, { recursive: true, force: true });
 }
 
 /* ---- Every agent gets the same make-card instructions ------------------ */
