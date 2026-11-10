@@ -12,16 +12,19 @@ no requests after the page itself, so it paints instantly on mobile data.
 
 ## Make your own
 
-**With an AI coding agent (easiest).** Use this repo as a template (or fork
-it), open your copy in Claude Code and run:
+**With an AI coding agent.** Use this repo as a template, open your copy in
+[Claude Code](https://claude.com/claude-code) or
+[Gemini CLI](https://github.com/google-gemini/gemini-cli), and run:
 
 ```
 /make-card
 ```
 
 It asks for your details, never makes any up, builds and tests the card,
-shows you a preview, and publishes it when you say so. Other agents can follow
-the same steps from [`AGENTS.md`](AGENTS.md).
+shows you a preview, and publishes it when you say so. Other coding agents can
+follow the same steps from [`AGENTS.md`](AGENTS.md). (Chat apps like the
+Gemini or Claude websites can't do this part: the agent needs to edit files
+and push to GitHub.)
 
 **By hand.** Use this repo as a template, then edit `card.json` on GitHub and
 commit. The workflow rebuilds `index.html`, runs the tests and publishes.
@@ -82,7 +85,8 @@ edits.
 | `scripts/test.mjs` | Runs the page script in a fake DOM and checks the vCard |
 | `qr/` | Full-screen QR page |
 | `.github/workflows/pages.yml` | Build, test and deploy on every push to `main` |
-| `.claude/skills/make-card/` | The `/make-card` agent workflow |
+| `.agents/skills/make-card/` | The `/make-card` agent workflow (copied to `.claude/skills/` for Claude Code) |
+| `.gemini/commands/` | `/make-card` for Gemini CLI |
 
 **Save contact** builds a vCard 3.0 in the browser (RFC 2426 escaping and line
 folding) and downloads it as a `.vcf`. Link previews, the page title and the

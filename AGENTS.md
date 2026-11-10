@@ -11,8 +11,9 @@ works as a standalone file. Never hand-edit `index.html`.
 
 ## Setting up or changing someone's card
 
-Follow `.claude/skills/make-card/SKILL.md` (Claude Code runs it as
-`/make-card`; other agents can read it as plain instructions). In short:
+Follow `.agents/skills/make-card/SKILL.md`. Claude Code and Gemini CLI both
+run it as `/make-card`; any other agent can read it as plain instructions.
+In short:
 interview the person, never invent values, write `card.json`, build, test,
 preview, and publish only with their go-ahead.
 
@@ -28,6 +29,9 @@ preview, and publish only with their go-ahead.
 | `index.html` | Generated. Committed so the repo always holds a working card. |
 | `qr/` | Full-screen QR page; encodes the URL one folder above itself, so it needs no edits. |
 | `.github/workflows/pages.yml` | On push to `main`: build, test, commit `index.html` if stale, deploy. |
+| `.agents/skills/make-card/` | The make-card workflow ([Agent Skills](https://agentskills.io) format; Gemini CLI and others). |
+| `.claude/skills/make-card/` | Identical copy where Claude Code looks. `scripts/test.mjs` fails if the two differ. |
+| `.gemini/commands/make-card.toml` | `/make-card` for Gemini CLI. |
 
 ## Commands
 

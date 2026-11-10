@@ -174,6 +174,13 @@ try {
   ok(false, "index.html is out of date — run: node scripts/build.mjs");
 }
 
+/* ---- Every agent gets the same make-card instructions ------------------ */
+{
+  const shared = readFileSync(join(ROOT, ".agents", "skills", "make-card", "SKILL.md"), "utf8");
+  const claude = readFileSync(join(ROOT, ".claude", "skills", "make-card", "SKILL.md"), "utf8");
+  ok(shared === claude, ".claude/skills/make-card/SKILL.md differs from .agents/skills/make-card/SKILL.md — copy one over the other");
+}
+
 rmSync(tmp, { recursive: true, force: true });
 console.log(failed ? `${failed} failed, ${passed} passed.` : `All ${passed} checks passed.`);
 process.exit(failed ? 1 : 0);

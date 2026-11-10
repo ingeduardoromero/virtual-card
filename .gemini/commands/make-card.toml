@@ -1,0 +1,9 @@
+description = "Make or update your digital business card: interview, build, test, preview, publish."
+prompt = """
+Make or update the user's digital business card in this repository.
+Follow these instructions exactly:
+
+@{.agents/skills/make-card/SKILL.md}
+
+Anything the user typed after the command: {{args}}
+"""
