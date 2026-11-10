@@ -5,14 +5,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# configure-pages needs pages:write to turn Pages on the first time it runs;
-# deploy-pages needs id-token:write to mint its deployment token.
 permissions:
-  contents: read
+  contents: write   # commit index.html back when card.json was edited on github.com
   pages: write
   id-token: write
 
-# Let a running deploy finish rather than cancelling it half-published.
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -26,13 +23,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build index.html from card.json
+        run: node scripts/build.mjs
+
+      - name: Test
+        run: node scripts/test.mjs
+
+      # Someone edited card.json in the browser and didn't rebuild: commit the
+      # result so the repository always holds a working index.html.
+      - name: Commit rebuilt index.html
+        run: |
+          if ! git diff --quiet -- index.html; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Rebuild index.html from card.json" -- index.html
+            git pull --rebase origin "$GITHUB_REF_NAME"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
+
       - name: Enable and configure Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
 
-      # Publish only the card and any image assets sitting at the repo root —
-      # not README.md, not .github/.
       - name: Assemble site
         run: |
           mkdir -p _site
